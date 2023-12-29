@@ -6,13 +6,13 @@ const path = require('path');
 // Envia informacion al Front a traves de una peticion GET.
 const showProducts = async(req,res) => {
 
-    connectDB.query('SELECT * FROM products',(err,data) => {
-      if (err) {
-        res.status(500).json({"message":">> Error getting data products"}, err);
-      } 
+  connectDB.query('SELECT * FROM products',(err,data) => {
+    if (err) {
+      res.status(500).json({"message":">> Error getting data products"}, err);
+    } 
        
-      res.status(200).send(data);
-    })
+    res.status(200).send(data);
+  })
 };
 
 // Recibe informacion del front del usuario que se ha registrado en la database.
@@ -65,7 +65,6 @@ const userLogin = async(req,res) => {
       // No se encontró ningún usuario con el correo electrónico proporcionado
       res.status(404).json({ "message": ">> User not found" });
     }
-
   });
 };
 
@@ -75,37 +74,43 @@ const newProduct = async(req,res) => {
   const image = "http://localhost:4300/" + req.file.path;
   console.log(product, price, stock, availableStock, image)
   
-  connectDB.query('INSERT INTO products(product, price, stock, availableStock, ruta_imagen) VALUES(?,?,?,?,?)', [product,price,stock,availableStock,image], async(err,result) => {
+  connectDB.query('INSERT INTO products(product, price, stock, availableStock, ruta_imagen) VALUES(?,?,?,?,?)', [product,price,stock,availableStock,image], async(err,data) => {
     if(err) {
       console.log('>> Error inserting the data: ' + err.message);
       res.status(500).json({message: '>> Error inserting the product in the database'});
       return;
     }
 
-    res.status(200).json({message: '>> Data inserted succesfully'})
+    res.status(200).json({message: '>> Data inserted succesfully'});
   });
-
 };
 
 // Modifica un dato especificado por el usuario.
 const modifyProduct = async(req,res) => {
-  
+  const { product, price, stock, availableStock, id } = req.body;
+  const image = "http://localhost:4300/" + req.file.path;
+  // const id = req.params.id;
+
+  connectDB.query("UPDATE products SET product=?, price=?, stock=?, availableStock=?, ruta_imagen=? WHERE id=?",[product, price, stock, availableStock,image, id],(err,data)=>{
+    if(err){
+        res.status(500).json({"message":">> Error in the update"});
+    } 
+
+    res.status(201).json({"message":">> Product modified"});
+  });
 };
 
 // Borra informacion de la database especificada por el usuario.
 const deleteProduct = async(req,res) => {
-  const idParams = req.params.id;
-  const { id } = req.body;
+  const { id } = req.params;
 
-  dbConnection.query("DELETE FROM products WHERE id=?",[id],(err,data)=>{
+  connectDB.query("DELETE FROM products WHERE id=?",[id],(err,data)=>{
     if(err){
       res.status(500).json({"massege":"Internal server error"});
     }
 
     res.status(200).json({"message":"Product deleted from the database"});
-
-   });
+  });
 };
-
 
 module.exports = { showProducts, userRegister, userLogin, newProduct, modifyProduct, deleteProduct };
